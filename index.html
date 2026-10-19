@@ -26,10 +26,17 @@
     h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; }
     .status-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; background: var(--card); border: 1px solid var(--border); color: var(--muted); }
 
-    .stats-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 8px; margin-bottom: 18px; }
-    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 6px; text-align: center; }
-    .stat-card .val { font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 2px; }
-    .stat-card .label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
+    /* Dual Comparison Split Containers */
+    .splits-wrapper { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+    .split-section { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+    .split-header { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .split-glasses { border-left: 4px solid var(--red); }
+    .split-contacts { border-left: 4px solid var(--blue); }
+
+    .stats-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 8px; }
+    .stat-card { background: #0f172a; border: 1px solid var(--border); border-radius: 6px; padding: 8px 6px; text-align: center; }
+    .stat-card .val { font-size: 1.1rem; font-weight: 700; color: #fff; margin-top: 2px; }
+    .stat-card .label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
 
     .table-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow-x: auto; margin-bottom: 24px; }
     table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.75rem; white-space: nowrap; }
@@ -82,8 +89,24 @@
       </div>
     </header>
 
-    <!-- Top Summary Row -->
-    <div class="stats-summary" id="stats-summary"></div>
+    <!-- Two Comparison Summary Blocks: Glasses vs Contacts -->
+    <div class="splits-wrapper" id="splits-summary-wrapper">
+      <div class="split-section split-glasses">
+        <div class="split-header">
+          <span class="badge-eye badge-g">G</span>
+          <span style="color: #f87171;">Glasses Only Averages</span>
+        </div>
+        <div class="stats-summary" id="stats-glasses"></div>
+      </div>
+
+      <div class="split-section split-contacts">
+        <div class="split-header">
+          <span class="badge-eye badge-c">C</span>
+          <span style="color: #38bdf8;">Contacts Only Averages</span>
+        </div>
+        <div class="stats-summary" id="stats-contacts"></div>
+      </div>
+    </div>
 
     <!-- Shoot Around Sessions Table -->
     <div class="table-box">
@@ -162,7 +185,6 @@
       if (state && Array.isArray(state.sessions) && state.sessions.length > 0) {
         state.sessions.forEach((s, idx) => {
           if (!s.glassesOrContacts && !s.gc) {
-            // Unshifted sessions: index 0 and 1 represent the last two workouts
             s.glassesOrContacts = (idx <= 1) ? "C" : "G";
           }
         });
@@ -281,19 +303,20 @@
       }
     }
 
-    function render() {
-      const tbody = document.getElementById('sessions-body');
-      tbody.innerHTML = '';
-
-      const sessions = state.sessions || [];
-      if (sessions.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="16" class="empty-state">No shoot-around sessions logged yet.</td></tr>`;
-        document.getElementById('stats-summary').innerHTML = '';
-        return;
+    function calculateAggregate(sessionsList) {
+      if (!sessionsList || sessionsList.length === 0) {
+        return `
+          <div class="stat-card"><div class="label">Sessions</div><div class="val">0</div></div>
+          <div class="stat-card"><div class="label">Avg Score</div><div class="val" style="color:var(--muted);">-</div></div>
+          <div class="stat-card"><div class="label">High Score</div><div class="val" style="color:var(--muted);">-</div></div>
+          <div class="stat-card"><div class="label">Total 3PT%</div><div class="val" style="color:var(--muted);">-</div></div>
+          <div class="stat-card"><div class="label">Total Mid%</div><div class="val" style="color:var(--muted);">-</div></div>
+          <div class="stat-card"><div class="label">Total FT%</div><div class="val" style="color:var(--muted);">-</div></div>
+        `;
       }
 
       let totals = {
-        sessions: sessions.length,
+        sessions: sessionsList.length,
         threeMade: 0,
         midMade: 0,
         midAtt: 0,
@@ -302,16 +325,57 @@
         maxPoints: 0
       };
 
-      sessions.forEach((s, idx) => {
+      sessionsList.forEach(s => {
         const m = getSessionMetrics(s);
-
         totals.threeMade += m.total3Made;
         totals.midMade += m.totalMidMade;
         totals.midAtt += m.totalMidAtt;
         totals.ftMade += m.ft;
         totals.totalPoints += m.points;
         if (m.points > totals.maxPoints) totals.maxPoints = m.points;
+      });
 
+      const n = totals.sessions;
+      const overall3Pct = ((totals.threeMade / (n * 100)) * 100).toFixed(1) + '%';
+      const overallMidPct = totals.midAtt > 0 ? ((totals.midMade / totals.midAtt) * 100).toFixed(1) + '%' : '0.0%';
+      const overallFtPct = ((totals.ftMade / (n * 50)) * 100).toFixed(1) + '%';
+      const avgPts = (totals.totalPoints / n).toFixed(1);
+
+      return `
+        <div class="stat-card"><div class="label">Sessions</div><div class="val">${n}</div></div>
+        <div class="stat-card"><div class="label">Avg Score</div><div class="val" style="color:var(--gold);">${avgPts}</div></div>
+        <div class="stat-card"><div class="label">High Score</div><div class="val" style="color:var(--gold);">${totals.maxPoints}</div></div>
+        <div class="stat-card"><div class="label">Total 3PT%</div><div class="val" style="color:var(--accent);">${overall3Pct}</div></div>
+        <div class="stat-card"><div class="label">Total Mid%</div><div class="val" style="color:var(--blue);">${overallMidPct}</div></div>
+        <div class="stat-card"><div class="label">Total FT%</div><div class="val" style="color:var(--green);">${overallFtPct}</div></div>
+      `;
+    }
+
+    function render() {
+      const tbody = document.getElementById('sessions-body');
+      tbody.innerHTML = '';
+
+      const sessions = state.sessions || [];
+      if (sessions.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="16" class="empty-state">No shoot-around sessions logged yet.</td></tr>`;
+        document.getElementById('stats-glasses').innerHTML = calculateAggregate([]);
+        document.getElementById('stats-contacts').innerHTML = calculateAggregate([]);
+        return;
+      }
+
+      const glassesSessions = [];
+      const contactsSessions = [];
+
+      sessions.forEach((s, idx) => {
+        const rawGC = (s.glassesOrContacts || s.gc || 'G').toUpperCase();
+        const gcVal = rawGC === 'C' ? 'C' : 'G';
+        if (gcVal === 'C') {
+          contactsSessions.push(s);
+        } else {
+          glassesSessions.push(s);
+        }
+
+        const m = getSessionMetrics(s);
         const s1Pct = ((m.s1 / 20) * 100).toFixed(1) + '%';
         const s2Pct = ((m.s2 / 20) * 100).toFixed(1) + '%';
         const s3Pct = ((m.s3 / 20) * 100).toFixed(1) + '%';
@@ -342,9 +406,6 @@
 
         const midPct = m.totalMidAtt > 0 ? ((m.totalMidMade / m.totalMidAtt) * 100).toFixed(1) + '%' : '0.0%';
         const ftPct = ((m.ft / 50) * 100).toFixed(1) + '%';
-
-        const rawGC = (s.glassesOrContacts || s.gc || 'G').toUpperCase();
-        const gcVal = rawGC === 'C' ? 'C' : 'G';
         const gcBadge = gcVal === 'C' ? `<span class="badge-eye badge-c">C</span>` : `<span class="badge-eye badge-g">G</span>`;
 
         const tr = document.createElement('tr');
@@ -366,20 +427,8 @@
         tbody.appendChild(tr);
       });
 
-      const n = totals.sessions;
-      const overall3Pct = ((totals.threeMade / (n * 100)) * 100).toFixed(1) + '%';
-      const overallMidPct = totals.midAtt > 0 ? ((totals.midMade / totals.midAtt) * 100).toFixed(1) + '%' : '0.0%';
-      const overallFtPct = ((totals.ftMade / (n * 50)) * 100).toFixed(1) + '%';
-      const avgPts = (totals.totalPoints / n).toFixed(1);
-
-      document.getElementById('stats-summary').innerHTML = `
-        <div class="stat-card"><div class="label">Sessions</div><div class="val">${n}</div></div>
-        <div class="stat-card"><div class="label">Avg Score</div><div class="val" style="color:var(--gold);">${avgPts}</div></div>
-        <div class="stat-card"><div class="label">High Score</div><div class="val" style="color:var(--gold);">${totals.maxPoints}</div></div>
-        <div class="stat-card"><div class="label">Total 3PT%</div><div class="val" style="color:var(--accent);">${overall3Pct}</div></div>
-        <div class="stat-card"><div class="label">Total Mid%</div><div class="val" style="color:var(--blue);">${overallMidPct}</div></div>
-        <div class="stat-card"><div class="label">Total FT%</div><div class="val" style="color:var(--green);">${overallFtPct}</div></div>
-      `;
+      document.getElementById('stats-glasses').innerHTML = calculateAggregate(glassesSessions);
+      document.getElementById('stats-contacts').innerHTML = calculateAggregate(contactsSessions);
     }
 
     function handleFormSubmit(e) {
