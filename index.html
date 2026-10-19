@@ -33,10 +33,11 @@
     .split-glasses { border-left: 4px solid var(--red); }
     .split-contacts { border-left: 4px solid var(--blue); }
 
-    .stats-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 8px; }
+    .stats-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(115px, 1fr)); gap: 8px; }
     .stat-card { background: #0f172a; border: 1px solid var(--border); border-radius: 6px; padding: 8px 6px; text-align: center; }
     .stat-card .val { font-size: 1.1rem; font-weight: 700; color: #fff; margin-top: 2px; }
     .stat-card .label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
+    .stat-card .sub-count { font-size: 0.68rem; color: var(--muted); font-weight: 600; margin-top: 1px; }
 
     .table-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow-x: auto; margin-bottom: 24px; }
     table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.75rem; white-space: nowrap; }
@@ -309,18 +310,20 @@
           <div class="stat-card"><div class="label">Sessions</div><div class="val">0</div></div>
           <div class="stat-card"><div class="label">Avg Score</div><div class="val" style="color:var(--muted);">-</div></div>
           <div class="stat-card"><div class="label">High Score</div><div class="val" style="color:var(--muted);">-</div></div>
-          <div class="stat-card"><div class="label">Total 3PT%</div><div class="val" style="color:var(--muted);">-</div></div>
-          <div class="stat-card"><div class="label">Total Mid%</div><div class="val" style="color:var(--muted);">-</div></div>
-          <div class="stat-card"><div class="label">Total FT%</div><div class="val" style="color:var(--muted);">-</div></div>
+          <div class="stat-card"><div class="label">Total 3PT%</div><div class="val" style="color:var(--muted);">-</div><div class="sub-count">0/0</div></div>
+          <div class="stat-card"><div class="label">Total Mid%</div><div class="val" style="color:var(--muted);">-</div><div class="sub-count">0/0</div></div>
+          <div class="stat-card"><div class="label">Total FT%</div><div class="val" style="color:var(--muted);">-</div><div class="sub-count">0/0</div></div>
         `;
       }
 
       let totals = {
         sessions: sessionsList.length,
         threeMade: 0,
+        threeAtt: 0,
         midMade: 0,
         midAtt: 0,
         ftMade: 0,
+        ftAtt: 0,
         totalPoints: 0,
         maxPoints: 0
       };
@@ -328,26 +331,40 @@
       sessionsList.forEach(s => {
         const m = getSessionMetrics(s);
         totals.threeMade += m.total3Made;
+        totals.threeAtt += 100;
         totals.midMade += m.totalMidMade;
         totals.midAtt += m.totalMidAtt;
         totals.ftMade += m.ft;
+        totals.ftAtt += 50;
         totals.totalPoints += m.points;
         if (m.points > totals.maxPoints) totals.maxPoints = m.points;
       });
 
       const n = totals.sessions;
-      const overall3Pct = ((totals.threeMade / (n * 100)) * 100).toFixed(1) + '%';
+      const overall3Pct = totals.threeAtt > 0 ? ((totals.threeMade / totals.threeAtt) * 100).toFixed(1) + '%' : '0.0%';
       const overallMidPct = totals.midAtt > 0 ? ((totals.midMade / totals.midAtt) * 100).toFixed(1) + '%' : '0.0%';
-      const overallFtPct = ((totals.ftMade / (n * 50)) * 100).toFixed(1) + '%';
+      const overallFtPct = totals.ftAtt > 0 ? ((totals.ftMade / totals.ftAtt) * 100).toFixed(1) + '%' : '0.0%';
       const avgPts = (totals.totalPoints / n).toFixed(1);
 
       return `
         <div class="stat-card"><div class="label">Sessions</div><div class="val">${n}</div></div>
         <div class="stat-card"><div class="label">Avg Score</div><div class="val" style="color:var(--gold);">${avgPts}</div></div>
         <div class="stat-card"><div class="label">High Score</div><div class="val" style="color:var(--gold);">${totals.maxPoints}</div></div>
-        <div class="stat-card"><div class="label">Total 3PT%</div><div class="val" style="color:var(--accent);">${overall3Pct}</div></div>
-        <div class="stat-card"><div class="label">Total Mid%</div><div class="val" style="color:var(--blue);">${overallMidPct}</div></div>
-        <div class="stat-card"><div class="label">Total FT%</div><div class="val" style="color:var(--green);">${overallFtPct}</div></div>
+        <div class="stat-card">
+          <div class="label">Total 3PT%</div>
+          <div class="val" style="color:var(--accent);">${overall3Pct}</div>
+          <div class="sub-count">${totals.threeMade}/${totals.threeAtt}</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Total Mid%</div>
+          <div class="val" style="color:var(--blue);">${overallMidPct}</div>
+          <div class="sub-count">${totals.midMade}/${totals.midAtt}</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Total FT%</div>
+          <div class="val" style="color:var(--green);">${overallFtPct}</div>
+          <div class="sub-count">${totals.ftMade}/${totals.ftAtt}</div>
+        </div>
       `;
     }
 
