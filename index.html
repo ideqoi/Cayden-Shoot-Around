@@ -21,7 +21,7 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: var(--bg); color: var(--text); padding: 16px; }
-    .container { max-width: 1650px; margin: 0 auto; }
+    .container { max-width: 1700px; margin: 0 auto; }
     header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
     h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; }
     .status-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; background: var(--card); border: 1px solid var(--border); color: var(--muted); }
@@ -41,6 +41,9 @@
     .green { color: var(--green); font-weight: 700; }
     .blue { color: var(--blue); font-weight: 700; }
     .pct-sub { color: var(--muted); font-size: 0.7rem; font-weight: 600; }
+    .badge-eye { font-weight: 800; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; }
+    .badge-g { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .badge-c { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
     .btn-del { background: transparent; border: 1px solid var(--red); color: var(--red); border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; cursor: pointer; }
     .btn-del:hover { background: var(--red); color: #fff; }
     .empty-state { padding: 30px; color: var(--muted); text-align: center; }
@@ -50,7 +53,7 @@
     .panel-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 10px; color: var(--text); }
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 10px; }
     .form-group label { display: block; font-size: 0.65rem; color: var(--muted); margin-bottom: 3px; text-transform: uppercase; font-weight: 600; }
-    .form-group input {
+    .form-group input, .form-group select {
       width: 100%; background: #0f172a; border: 1px solid var(--border); color: #fff; padding: 7px 8px; border-radius: 4px; font-size: 0.82rem; outline: none;
     }
     .submit-btn {
@@ -88,6 +91,7 @@
         <thead>
           <tr>
             <th>Date</th>
+            <th>G/C</th>
             <th>Corner L (S1)</th>
             <th>Wing L (S2)</th>
             <th>Top (S3)</th>
@@ -123,6 +127,13 @@
         <form id="session-form" onsubmit="handleFormSubmit(event)">
           <div class="form-grid">
             <div class="form-group"><label>Date</label><input type="date" id="s-date" required /></div>
+            <div class="form-group">
+              <label>Vision (G / C)</label>
+              <select id="s-gc">
+                <option value="G">Glasses (G)</option>
+                <option value="C">Contacts (C)</option>
+              </select>
+            </div>
             <div class="form-group"><label>Corner L (S1 /20)</label><input type="number" id="s-s1" min="0" max="20" placeholder="0" /></div>
             <div class="form-group"><label>Wing L (S2 /20)</label><input type="number" id="s-s2" min="0" max="20" placeholder="0" /></div>
             <div class="form-group"><label>Top (S3 /20)</label><input type="number" id="s-s3" min="0" max="20" placeholder="0" /></div>
@@ -146,6 +157,17 @@
     let state = {
       sessions: []
     };
+
+    function applyHistoricalGlassesDefaults() {
+      if (state && Array.isArray(state.sessions) && state.sessions.length > 0) {
+        state.sessions.forEach((s, idx) => {
+          if (!s.glassesOrContacts && !s.gc) {
+            // Unshifted sessions: index 0 and 1 represent the last two workouts
+            s.glassesOrContacts = (idx <= 1) ? "C" : "G";
+          }
+        });
+      }
+    }
 
     function getSessionMetrics(s) {
       const s1 = Number(s.s1 !== undefined ? s.s1 : (s.cornerLeft !== undefined ? s.cornerLeft : 0)) || 0;
@@ -196,10 +218,12 @@
         const data = await res.json();
         if (data && Array.isArray(data.sessions)) {
           state = data;
+          applyHistoricalGlassesDefaults();
           localStorage.setItem('cayden_shooting_cache', JSON.stringify(state));
           setStatus("Synced with Drive");
         } else if (Array.isArray(data)) {
           state = { sessions: data };
+          applyHistoricalGlassesDefaults();
           localStorage.setItem('cayden_shooting_cache', JSON.stringify(state));
           setStatus("Synced with Drive");
         } else {
@@ -214,7 +238,10 @@
     function fallbackLocal(msg) {
       const local = localStorage.getItem('cayden_shooting_cache');
       if (local) {
-        try { state = JSON.parse(local); } catch(e){}
+        try {
+          state = JSON.parse(local);
+          applyHistoricalGlassesDefaults();
+        } catch(e){}
       }
       setStatus(msg);
     }
@@ -260,7 +287,7 @@
 
       const sessions = state.sessions || [];
       if (sessions.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="15" class="empty-state">No shoot-around sessions logged yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="16" class="empty-state">No shoot-around sessions logged yet.</td></tr>`;
         document.getElementById('stats-summary').innerHTML = '';
         return;
       }
@@ -316,9 +343,14 @@
         const midPct = m.totalMidAtt > 0 ? ((m.totalMidMade / m.totalMidAtt) * 100).toFixed(1) + '%' : '0.0%';
         const ftPct = ((m.ft / 50) * 100).toFixed(1) + '%';
 
+        const rawGC = (s.glassesOrContacts || s.gc || 'G').toUpperCase();
+        const gcVal = rawGC === 'C' ? 'C' : 'G';
+        const gcBadge = gcVal === 'C' ? `<span class="badge-eye badge-c">C</span>` : `<span class="badge-eye badge-g">G</span>`;
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${s.date || '-'}</td>
+          <td>${gcBadge}</td>
           <td>${m.s1}/20 <span class="pct-sub">(${s1Pct})</span></td>
           <td>${m.s2}/20 <span class="pct-sub">(${s2Pct})</span></td>
           <td>${m.s3}/20 <span class="pct-sub">(${s3Pct})</span></td>
@@ -354,6 +386,7 @@
       e.preventDefault();
       const newSession = {
         date: document.getElementById('s-date').value,
+        glassesOrContacts: document.getElementById('s-gc').value,
         s1: Number(document.getElementById('s-s1').value) || 0,
         s2: Number(document.getElementById('s-s2').value) || 0,
         s3: Number(document.getElementById('s-s3').value) || 0,
@@ -386,6 +419,7 @@
           if (!state.sessions) state.sessions = [];
           state.sessions.unshift(parsed);
         }
+        applyHistoricalGlassesDefaults();
         render();
         saveData();
         document.getElementById('import-json-box').value = '';
