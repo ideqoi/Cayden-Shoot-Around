@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Two tabs: Old routine and New routine -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -75,6 +76,16 @@
     textarea.json-input {
       width: 100%; height: 80px; background: #0f172a; border: 1px solid var(--border); color: #38bdf8; font-family: monospace; font-size: 0.78rem; padding: 8px; border-radius: 6px; outline: none;
     }
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tab-btn { background: var(--card); border: 1px solid var(--border); color: var(--muted); padding: 9px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+    .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+    .stats-group-title { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; margin: 10px 0 6px; }
+    .stats-group-title:first-child { margin-top: 0; }
+    .step-title { grid-column: 1 / -1; font-size: 0.72rem; color: var(--accent); text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; margin-top: 6px; }
+    .check-row { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
+    .check-row input { width: 18px; height: 18px; }
   </style>
 </head>
 <body>
@@ -90,6 +101,12 @@
       </div>
     </header>
 
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-btn-old" onclick="showTab('old')">Old routine</button>
+      <button class="tab-btn" id="tab-btn-new" onclick="showTab('new')">New routine</button>
+    </div>
+
+    <div class="tab-pane active" id="tab-old">
     <!-- Two Comparison Summary Blocks: Glasses vs Contacts -->
     <div class="splits-wrapper" id="splits-summary-wrapper">
       <div class="split-section split-glasses">
@@ -173,6 +190,76 @@
         </form>
       </div>
     </div>
+    </div>
+
+    <!-- New Routine tab: new-format sessions only -->
+    <div class="tab-pane" id="tab-new">
+      <div class="splits-wrapper">
+        <div class="split-section" style="border-left: 4px solid var(--accent);">
+          <div class="split-header"><span style="color: var(--accent);">New Routine Percentages (new-format sessions only)</span></div>
+          <div id="stats-new"></div>
+        </div>
+      </div>
+
+      <div class="table-box">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>G/C</th>
+              <th>Warm-up</th>
+              <th>3s L Wing (/5)</th>
+              <th>3s R Wing (/5)</th>
+              <th>Total 3PT (/10)</th>
+              <th>FT Set 1 (/50)</th>
+              <th>Mid L Drv L</th>
+              <th>Mid L Drv R</th>
+              <th>Mid R Drv L</th>
+              <th>Mid R Drv R</th>
+              <th>Total Mid (/100)</th>
+              <th>FT Set 2 (/50)</th>
+              <th>FT Total (/100)</th>
+              <th style="color:var(--gold);">Total Points</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="new-sessions-body"></tbody>
+        </table>
+      </div>
+
+      <div class="panels-grid">
+        <div class="panel-box">
+          <div class="panel-title">Log New Routine Session</div>
+          <form id="new-session-form" onsubmit="handleNewFormSubmit(event)">
+            <div class="form-grid">
+              <div class="form-group"><label>Date</label><input type="date" id="n-date" required /></div>
+              <div class="form-group">
+                <label>Vision (G / C)</label>
+                <select id="n-gc">
+                  <option value="C">Contacts (C)</option>
+                  <option value="G">Glasses (G)</option>
+                </select>
+              </div>
+              <div class="step-title">1. Warm-up (form shots)</div>
+              <label class="check-row"><input type="checkbox" id="n-warmup" /> Warm-up form shots done</label>
+              <div class="step-title">2. Threes</div>
+              <div class="form-group"><label>Left Wing (/5)</label><input type="number" id="n-three-lw" min="0" max="5" placeholder="0" /></div>
+              <div class="form-group"><label>Right Wing (/5)</label><input type="number" id="n-three-rw" min="0" max="5" placeholder="0" /></div>
+              <div class="step-title">3. Free Throws, Set 1</div>
+              <div class="form-group"><label>FT Set 1 (/50)</label><input type="number" id="n-ft1" min="0" max="50" placeholder="0" /></div>
+              <div class="step-title">4. Mid-Range (all contested)</div>
+              <div class="form-group"><label>L Side, Drive L (/25)</label><input type="number" id="n-mid-ldl" min="0" max="25" placeholder="0" /></div>
+              <div class="form-group"><label>L Side, Drive R (/25)</label><input type="number" id="n-mid-ldr" min="0" max="25" placeholder="0" /></div>
+              <div class="form-group"><label>R Side, Drive L (/25)</label><input type="number" id="n-mid-rdl" min="0" max="25" placeholder="0" /></div>
+              <div class="form-group"><label>R Side, Drive R (/25)</label><input type="number" id="n-mid-rdr" min="0" max="25" placeholder="0" /></div>
+              <div class="step-title">5. Free Throws, Set 2</div>
+              <div class="form-group"><label>FT Set 2 (/50)</label><input type="number" id="n-ft2" min="0" max="50" placeholder="0" /></div>
+            </div>
+            <button type="submit" class="submit-btn">Save New Routine Session</button>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -185,11 +272,153 @@
     function applyHistoricalGlassesDefaults() {
       if (state && Array.isArray(state.sessions) && state.sessions.length > 0) {
         state.sessions.forEach((s, idx) => {
-          if (!s.glassesOrContacts && !s.gc) {
+          if (!isNewRoutine(s) && !s.glassesOrContacts && !s.gc) {
             s.glassesOrContacts = (idx <= 1) ? "C" : "G";
           }
         });
       }
+    }
+
+    // New routine sessions are tagged routine:"v2"; everything else is the old format.
+    function isNewRoutine(s) { return !!s && s.routine === 'v2'; }
+
+    function showTab(which) {
+      ['old', 'new'].forEach(t => {
+        document.getElementById('tab-' + t).classList.toggle('active', t === which);
+        document.getElementById('tab-btn-' + t).classList.toggle('active', t === which);
+      });
+      try { localStorage.setItem('cayden_shooting_tab', which); } catch (e) {}
+    }
+
+    function clampNum(v, max) {
+      const n = Math.round(Number(v) || 0);
+      return Math.max(0, Math.min(max, n));
+    }
+
+    function getNewMetrics(s) {
+      const threeLW = Number(s.threeLW) || 0;
+      const threeRW = Number(s.threeRW) || 0;
+      const ft1 = Number(s.ft1) || 0;
+      const ft2 = Number(s.ft2) || 0;
+      const midLDL = Number(s.midLDL) || 0;
+      const midLDR = Number(s.midLDR) || 0;
+      const midRDL = Number(s.midRDL) || 0;
+      const midRDR = Number(s.midRDR) || 0;
+      const three = threeLW + threeRW;
+      const ft = ft1 + ft2;
+      const mid = midLDL + midLDR + midRDL + midRDR;
+      const points = three * 3 + mid * 2 + ft;
+      return { threeLW, threeRW, three, ft1, ft2, ft, midLDL, midLDR, midRDL, midRDR, mid, points, warmup: !!s.warmup };
+    }
+
+    function pct(made, att) {
+      return att > 0 ? ((made / att) * 100).toFixed(1) + '%' : '-';
+    }
+
+    function statCard(label, made, att, color) {
+      const has = att > 0;
+      return `<div class="stat-card"><div class="label">${label}</div><div class="val" style="color:${has ? color : 'var(--muted)'};">${pct(made, att)}</div><div class="sub-count">${made}/${att}</div></div>`;
+    }
+
+    function calculateNewAggregate(list) {
+      const t = { n: list.length, lw: 0, rw: 0, ft1: 0, ft2: 0, ldl: 0, ldr: 0, rdl: 0, rdr: 0, pts: 0, max: 0 };
+      list.forEach(s => {
+        const m = getNewMetrics(s);
+        t.lw += m.threeLW; t.rw += m.threeRW; t.ft1 += m.ft1; t.ft2 += m.ft2;
+        t.ldl += m.midLDL; t.ldr += m.midLDR; t.rdl += m.midRDL; t.rdr += m.midRDR;
+        t.pts += m.points; if (m.points > t.max) t.max = m.points;
+      });
+      const n = t.n;
+      return `
+        <div class="stats-group-title">Overview</div>
+        <div class="stats-summary">
+          <div class="stat-card"><div class="label">Sessions</div><div class="val">${n}</div></div>
+          <div class="stat-card"><div class="label">Avg Score</div><div class="val" style="color:${n ? 'var(--gold)' : 'var(--muted)'};">${n ? (t.pts / n).toFixed(1) : '-'}</div></div>
+          <div class="stat-card"><div class="label">High Score</div><div class="val" style="color:${n ? 'var(--gold)' : 'var(--muted)'};">${n ? t.max : '-'}</div></div>
+        </div>
+        <div class="stats-group-title">Threes</div>
+        <div class="stats-summary">
+          ${statCard('Left Wing 3s', t.lw, n * 5, 'var(--accent)')}
+          ${statCard('Right Wing 3s', t.rw, n * 5, 'var(--accent)')}
+          ${statCard('3s Total', t.lw + t.rw, n * 10, 'var(--accent)')}
+        </div>
+        <div class="stats-group-title">Free Throws</div>
+        <div class="stats-summary">
+          ${statCard('FT Set 1', t.ft1, n * 50, 'var(--green)')}
+          ${statCard('FT Set 2', t.ft2, n * 50, 'var(--green)')}
+          ${statCard('FT Total', t.ft1 + t.ft2, n * 100, 'var(--green)')}
+        </div>
+        <div class="stats-group-title">Mid-Range (contested)</div>
+        <div class="stats-summary">
+          ${statCard('L Side Drive L', t.ldl, n * 25, 'var(--blue)')}
+          ${statCard('L Side Drive R', t.ldr, n * 25, 'var(--blue)')}
+          ${statCard('R Side Drive L', t.rdl, n * 25, 'var(--blue)')}
+          ${statCard('R Side Drive R', t.rdr, n * 25, 'var(--blue)')}
+          ${statCard('Mid Total', t.ldl + t.ldr + t.rdl + t.rdr, n * 100, 'var(--blue)')}
+        </div>`;
+    }
+
+    function renderNew() {
+      const tbody = document.getElementById('new-sessions-body');
+      tbody.innerHTML = '';
+      const all = state.sessions || [];
+      const list = [];
+      all.forEach((s, idx) => {
+        if (!isNewRoutine(s)) return;
+        list.push(s);
+        const m = getNewMetrics(s);
+        const rawGC = (s.glassesOrContacts || s.gc || 'C').toUpperCase();
+        const gcBadge = rawGC === 'G' ? `<span class="badge-eye badge-g">G</span>` : `<span class="badge-eye badge-c">C</span>`;
+        const cell = (made, att) => `${made}/${att} <span class="pct-sub">(${pct(made, att)})</span>`;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${s.date || '-'}</td>
+          <td>${gcBadge}</td>
+          <td>${m.warmup ? '<span class="green">✓</span>' : '<span class="pct-sub">-</span>'}</td>
+          <td>${cell(m.threeLW, 5)}</td>
+          <td>${cell(m.threeRW, 5)}</td>
+          <td class="highlight">${cell(m.three, 10)}</td>
+          <td>${cell(m.ft1, 50)}</td>
+          <td>${cell(m.midLDL, 25)}</td>
+          <td>${cell(m.midLDR, 25)}</td>
+          <td>${cell(m.midRDL, 25)}</td>
+          <td>${cell(m.midRDR, 25)}</td>
+          <td class="blue">${cell(m.mid, 100)}</td>
+          <td>${cell(m.ft2, 50)}</td>
+          <td class="green">${cell(m.ft, 100)}</td>
+          <td class="pts-highlight">${m.points} pts</td>
+          <td><button class="btn-del" onclick="deleteSession(${idx})">✕</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="16" class="empty-state">No new routine sessions logged yet.</td></tr>`;
+      }
+      document.getElementById('stats-new').innerHTML = calculateNewAggregate(list);
+    }
+
+    function handleNewFormSubmit(e) {
+      e.preventDefault();
+      const v = id => document.getElementById(id).value;
+      const newSession = {
+        routine: 'v2',
+        date: v('n-date'),
+        glassesOrContacts: v('n-gc'),
+        warmup: document.getElementById('n-warmup').checked,
+        threeLW: clampNum(v('n-three-lw'), 5),
+        threeRW: clampNum(v('n-three-rw'), 5),
+        ft1: clampNum(v('n-ft1'), 50),
+        midLDL: clampNum(v('n-mid-ldl'), 25),
+        midLDR: clampNum(v('n-mid-ldr'), 25),
+        midRDL: clampNum(v('n-mid-rdl'), 25),
+        midRDR: clampNum(v('n-mid-rdr'), 25),
+        ft2: clampNum(v('n-ft2'), 50)
+      };
+      if (!state.sessions) state.sessions = [];
+      state.sessions.unshift(newSession);
+      render();
+      saveData();
+      e.target.reset();
     }
 
     function getSessionMetrics(s) {
@@ -369,11 +598,12 @@
     }
 
     function render() {
+      renderNew();
       const tbody = document.getElementById('sessions-body');
       tbody.innerHTML = '';
 
       const sessions = state.sessions || [];
-      if (sessions.length === 0) {
+      if (!sessions.some(s => !isNewRoutine(s))) {
         tbody.innerHTML = `<tr><td colspan="16" class="empty-state">No shoot-around sessions logged yet.</td></tr>`;
         document.getElementById('stats-glasses').innerHTML = calculateAggregate([]);
         document.getElementById('stats-contacts').innerHTML = calculateAggregate([]);
@@ -384,6 +614,7 @@
       const contactsSessions = [];
 
       sessions.forEach((s, idx) => {
+        if (isNewRoutine(s)) return;
         const rawGC = (s.glassesOrContacts || s.gc || 'G').toUpperCase();
         const gcVal = rawGC === 'C' ? 'C' : 'G';
         if (gcVal === 'C') {
@@ -477,10 +708,16 @@
       if (!raw) return;
       try {
         const parsed = JSON.parse(raw);
+        const replaceAll = (arr) => {
+          // Replacing with a list that has only one format keeps the other format's sessions.
+          const hasNew = arr.some(isNewRoutine), hasOld = arr.some(x => !isNewRoutine(x));
+          const keep = (state.sessions || []).filter(x => (hasNew && hasOld) ? false : (hasNew ? !isNewRoutine(x) : isNewRoutine(x)));
+          state.sessions = arr.concat(keep);
+        };
         if (Array.isArray(parsed)) {
-          state.sessions = parsed;
+          replaceAll(parsed);
         } else if (parsed.sessions && Array.isArray(parsed.sessions)) {
-          state.sessions = parsed.sessions;
+          replaceAll(parsed.sessions);
         } else {
           if (!state.sessions) state.sessions = [];
           state.sessions.unshift(parsed);
@@ -495,6 +732,7 @@
       }
     }
 
+    try { if (localStorage.getItem('cayden_shooting_tab') === 'new') showTab('new'); } catch (e) {}
     loadData();
   </script>
 </body>
