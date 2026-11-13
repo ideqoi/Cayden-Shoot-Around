@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Two tabs: Old routine and New routine -->
+<!-- Two tabs: Old routine and New routine. New routine logs made and taken per set. -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -208,17 +208,17 @@
               <th>Date</th>
               <th>G/C</th>
               <th>Warm-up</th>
-              <th>3s L Wing (/5)</th>
-              <th>3s R Wing (/5)</th>
-              <th>Total 3PT (/10)</th>
-              <th>FT Set 1 (/50)</th>
+              <th>3s L Wing</th>
+              <th>3s R Wing</th>
+              <th>Total 3PT</th>
+              <th>FT Set 1</th>
               <th>Mid L Drv L</th>
               <th>Mid L Drv R</th>
               <th>Mid R Drv L</th>
               <th>Mid R Drv R</th>
-              <th>Total Mid (/100)</th>
-              <th>FT Set 2 (/50)</th>
-              <th>FT Total (/100)</th>
+              <th>Total Mid</th>
+              <th>FT Set 2</th>
+              <th>FT Total</th>
               <th style="color:var(--gold);">Total Points</th>
               <th>Action</th>
             </tr>
@@ -243,18 +243,27 @@
               <div class="step-title">1. Warm-up (form shots)</div>
               <label class="check-row"><input type="checkbox" id="n-warmup" /> Warm-up form shots done</label>
               <div class="step-title">2. Threes</div>
-              <div class="form-group"><label>Left Wing (/5)</label><input type="number" id="n-three-lw" min="0" max="5" placeholder="0" /></div>
-              <div class="form-group"><label>Right Wing (/5)</label><input type="number" id="n-three-rw" min="0" max="5" placeholder="0" /></div>
+              <div class="form-group"><label>Left Wing Made</label><input type="number" id="n-three-lw" min="0" max="5" placeholder="0" /></div>
+              <div class="form-group"><label>Left Wing Taken</label><input type="number" id="n-three-lw-att" min="0" max="5" value="5" /></div>
+              <div class="form-group"><label>Right Wing Made</label><input type="number" id="n-three-rw" min="0" max="5" placeholder="0" /></div>
+              <div class="form-group"><label>Right Wing Taken</label><input type="number" id="n-three-rw-att" min="0" max="5" value="5" /></div>
               <div class="step-title">3. Free Throws, Set 1</div>
-              <div class="form-group"><label>FT Set 1 (/50)</label><input type="number" id="n-ft1" min="0" max="50" placeholder="0" /></div>
+              <div class="form-group"><label>FT Set 1 Made</label><input type="number" id="n-ft1" min="0" max="50" placeholder="0" /></div>
+              <div class="form-group"><label>FT Set 1 Taken</label><input type="number" id="n-ft1-att" min="0" max="50" value="50" /></div>
               <div class="step-title">4. Mid-Range (all contested)</div>
-              <div class="form-group"><label>L Side, Drive L (/25)</label><input type="number" id="n-mid-ldl" min="0" max="25" placeholder="0" /></div>
-              <div class="form-group"><label>L Side, Drive R (/25)</label><input type="number" id="n-mid-ldr" min="0" max="25" placeholder="0" /></div>
-              <div class="form-group"><label>R Side, Drive L (/25)</label><input type="number" id="n-mid-rdl" min="0" max="25" placeholder="0" /></div>
-              <div class="form-group"><label>R Side, Drive R (/25)</label><input type="number" id="n-mid-rdr" min="0" max="25" placeholder="0" /></div>
+              <div class="form-group"><label>L Side, Drive L Made</label><input type="number" id="n-mid-ldl" min="0" max="25" placeholder="0" /></div>
+              <div class="form-group"><label>L Side, Drive L Taken</label><input type="number" id="n-mid-ldl-att" min="0" max="25" value="25" /></div>
+              <div class="form-group"><label>L Side, Drive R Made</label><input type="number" id="n-mid-ldr" min="0" max="25" placeholder="0" /></div>
+              <div class="form-group"><label>L Side, Drive R Taken</label><input type="number" id="n-mid-ldr-att" min="0" max="25" value="25" /></div>
+              <div class="form-group"><label>R Side, Drive L Made</label><input type="number" id="n-mid-rdl" min="0" max="25" placeholder="0" /></div>
+              <div class="form-group"><label>R Side, Drive L Taken</label><input type="number" id="n-mid-rdl-att" min="0" max="25" value="25" /></div>
+              <div class="form-group"><label>R Side, Drive R Made</label><input type="number" id="n-mid-rdr" min="0" max="25" placeholder="0" /></div>
+              <div class="form-group"><label>R Side, Drive R Taken</label><input type="number" id="n-mid-rdr-att" min="0" max="25" value="25" /></div>
               <div class="step-title">5. Free Throws, Set 2</div>
-              <div class="form-group"><label>FT Set 2 (/50)</label><input type="number" id="n-ft2" min="0" max="50" placeholder="0" /></div>
+              <div class="form-group"><label>FT Set 2 Made</label><input type="number" id="n-ft2" min="0" max="50" placeholder="0" /></div>
+              <div class="form-group"><label>FT Set 2 Taken</label><input type="number" id="n-ft2-att" min="0" max="50" value="50" /></div>
             </div>
+            <p style="color: var(--muted); font-size: 0.72rem; margin-top: 8px;">Taken starts at the full set. Lower it if a set gets cut short.</p>
             <button type="submit" class="submit-btn">Save New Routine Session</button>
           </form>
         </div>
@@ -308,7 +317,17 @@
       const ft = ft1 + ft2;
       const mid = midLDL + midLDR + midRDL + midRDR;
       const points = three * 3 + mid * 2 + ft;
-      return { threeLW, threeRW, three, ft1, ft2, ft, midLDL, midLDR, midRDL, midRDR, mid, points, warmup: !!s.warmup };
+      // Shots taken per set; sessions saved before this field existed use the full set size.
+      const att = (key, full) => (s[key] !== undefined && s[key] !== null && s[key] !== '') ? (Number(s[key]) || 0) : full;
+      const a = {
+        threeLW: att('threeLWAtt', 5), threeRW: att('threeRWAtt', 5),
+        ft1: att('ft1Att', 50), ft2: att('ft2Att', 50),
+        midLDL: att('midLDLAtt', 25), midLDR: att('midLDRAtt', 25), midRDL: att('midRDLAtt', 25), midRDR: att('midRDRAtt', 25)
+      };
+      a.three = a.threeLW + a.threeRW;
+      a.ft = a.ft1 + a.ft2;
+      a.mid = a.midLDL + a.midLDR + a.midRDL + a.midRDR;
+      return { threeLW, threeRW, three, ft1, ft2, ft, midLDL, midLDR, midRDL, midRDR, mid, points, warmup: !!s.warmup, att: a };
     }
 
     function pct(made, att) {
@@ -322,11 +341,14 @@
 
     function calculateNewAggregate(list) {
       const t = { n: list.length, lw: 0, rw: 0, ft1: 0, ft2: 0, ldl: 0, ldr: 0, rdl: 0, rdr: 0, pts: 0, max: 0 };
+      const A = { lw: 0, rw: 0, ft1: 0, ft2: 0, ldl: 0, ldr: 0, rdl: 0, rdr: 0 };
       list.forEach(s => {
         const m = getNewMetrics(s);
         t.lw += m.threeLW; t.rw += m.threeRW; t.ft1 += m.ft1; t.ft2 += m.ft2;
         t.ldl += m.midLDL; t.ldr += m.midLDR; t.rdl += m.midRDL; t.rdr += m.midRDR;
         t.pts += m.points; if (m.points > t.max) t.max = m.points;
+        A.lw += m.att.threeLW; A.rw += m.att.threeRW; A.ft1 += m.att.ft1; A.ft2 += m.att.ft2;
+        A.ldl += m.att.midLDL; A.ldr += m.att.midLDR; A.rdl += m.att.midRDL; A.rdr += m.att.midRDR;
       });
       const n = t.n;
       return `
@@ -338,23 +360,23 @@
         </div>
         <div class="stats-group-title">Threes</div>
         <div class="stats-summary">
-          ${statCard('Left Wing 3s', t.lw, n * 5, 'var(--accent)')}
-          ${statCard('Right Wing 3s', t.rw, n * 5, 'var(--accent)')}
-          ${statCard('3s Total', t.lw + t.rw, n * 10, 'var(--accent)')}
+          ${statCard('Left Wing 3s', t.lw, A.lw, 'var(--accent)')}
+          ${statCard('Right Wing 3s', t.rw, A.rw, 'var(--accent)')}
+          ${statCard('3s Total', t.lw + t.rw, A.lw + A.rw, 'var(--accent)')}
         </div>
         <div class="stats-group-title">Free Throws</div>
         <div class="stats-summary">
-          ${statCard('FT Set 1', t.ft1, n * 50, 'var(--green)')}
-          ${statCard('FT Set 2', t.ft2, n * 50, 'var(--green)')}
-          ${statCard('FT Total', t.ft1 + t.ft2, n * 100, 'var(--green)')}
+          ${statCard('FT Set 1', t.ft1, A.ft1, 'var(--green)')}
+          ${statCard('FT Set 2', t.ft2, A.ft2, 'var(--green)')}
+          ${statCard('FT Total', t.ft1 + t.ft2, A.ft1 + A.ft2, 'var(--green)')}
         </div>
         <div class="stats-group-title">Mid-Range (contested)</div>
         <div class="stats-summary">
-          ${statCard('L Side Drive L', t.ldl, n * 25, 'var(--blue)')}
-          ${statCard('L Side Drive R', t.ldr, n * 25, 'var(--blue)')}
-          ${statCard('R Side Drive L', t.rdl, n * 25, 'var(--blue)')}
-          ${statCard('R Side Drive R', t.rdr, n * 25, 'var(--blue)')}
-          ${statCard('Mid Total', t.ldl + t.ldr + t.rdl + t.rdr, n * 100, 'var(--blue)')}
+          ${statCard('L Side Drive L', t.ldl, A.ldl, 'var(--blue)')}
+          ${statCard('L Side Drive R', t.ldr, A.ldr, 'var(--blue)')}
+          ${statCard('R Side Drive L', t.rdl, A.rdl, 'var(--blue)')}
+          ${statCard('R Side Drive R', t.rdr, A.rdr, 'var(--blue)')}
+          ${statCard('Mid Total', t.ldl + t.ldr + t.rdl + t.rdr, A.ldl + A.ldr + A.rdl + A.rdr, 'var(--blue)')}
         </div>`;
     }
 
@@ -375,17 +397,17 @@
           <td>${s.date || '-'}</td>
           <td>${gcBadge}</td>
           <td>${m.warmup ? '<span class="green">✓</span>' : '<span class="pct-sub">-</span>'}</td>
-          <td>${cell(m.threeLW, 5)}</td>
-          <td>${cell(m.threeRW, 5)}</td>
-          <td class="highlight">${cell(m.three, 10)}</td>
-          <td>${cell(m.ft1, 50)}</td>
-          <td>${cell(m.midLDL, 25)}</td>
-          <td>${cell(m.midLDR, 25)}</td>
-          <td>${cell(m.midRDL, 25)}</td>
-          <td>${cell(m.midRDR, 25)}</td>
-          <td class="blue">${cell(m.mid, 100)}</td>
-          <td>${cell(m.ft2, 50)}</td>
-          <td class="green">${cell(m.ft, 100)}</td>
+          <td>${cell(m.threeLW, m.att.threeLW)}</td>
+          <td>${cell(m.threeRW, m.att.threeRW)}</td>
+          <td class="highlight">${cell(m.three, m.att.three)}</td>
+          <td>${cell(m.ft1, m.att.ft1)}</td>
+          <td>${cell(m.midLDL, m.att.midLDL)}</td>
+          <td>${cell(m.midLDR, m.att.midLDR)}</td>
+          <td>${cell(m.midRDL, m.att.midRDL)}</td>
+          <td>${cell(m.midRDR, m.att.midRDR)}</td>
+          <td class="blue">${cell(m.mid, m.att.mid)}</td>
+          <td>${cell(m.ft2, m.att.ft2)}</td>
+          <td class="green">${cell(m.ft, m.att.ft)}</td>
           <td class="pts-highlight">${m.points} pts</td>
           <td><button class="btn-del" onclick="deleteSession(${idx})">✕</button></td>
         `;
@@ -400,6 +422,15 @@
     function handleNewFormSubmit(e) {
       e.preventDefault();
       const v = id => document.getElementById(id).value;
+      const sets = [['n-three-lw', 5, 'Left wing 3s'], ['n-three-rw', 5, 'Right wing 3s'], ['n-ft1', 50, 'FT set 1'],
+        ['n-mid-ldl', 25, 'L side drive L'], ['n-mid-ldr', 25, 'L side drive R'], ['n-mid-rdl', 25, 'R side drive L'],
+        ['n-mid-rdr', 25, 'R side drive R'], ['n-ft2', 50, 'FT set 2']];
+      for (const [id, full, name] of sets) {
+        if (clampNum(v(id), full) > clampNum(v(id + '-att'), full)) {
+          alert(name + ': made can\'t be more than taken.');
+          return;
+        }
+      }
       const newSession = {
         routine: 'v2',
         date: v('n-date'),
@@ -412,7 +443,15 @@
         midLDR: clampNum(v('n-mid-ldr'), 25),
         midRDL: clampNum(v('n-mid-rdl'), 25),
         midRDR: clampNum(v('n-mid-rdr'), 25),
-        ft2: clampNum(v('n-ft2'), 50)
+        ft2: clampNum(v('n-ft2'), 50),
+        threeLWAtt: clampNum(v('n-three-lw-att'), 5),
+        threeRWAtt: clampNum(v('n-three-rw-att'), 5),
+        ft1Att: clampNum(v('n-ft1-att'), 50),
+        midLDLAtt: clampNum(v('n-mid-ldl-att'), 25),
+        midLDRAtt: clampNum(v('n-mid-ldr-att'), 25),
+        midRDLAtt: clampNum(v('n-mid-rdl-att'), 25),
+        midRDRAtt: clampNum(v('n-mid-rdr-att'), 25),
+        ft2Att: clampNum(v('n-ft2-att'), 50)
       };
       if (!state.sessions) state.sessions = [];
       state.sessions.unshift(newSession);
