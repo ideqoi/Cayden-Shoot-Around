@@ -279,7 +279,6 @@
               <th>Date</th>
               <th>2 ft</th>
               <th>7 ft</th>
-              <th>Free Throws</th>
               <th>Overall</th>
               <th>Action</th>
             </tr>
@@ -300,9 +299,6 @@
               <div class="step-title">7 ft</div>
               <div class="form-group"><label>7 ft Made</label><input type="number" id="a-arc7" min="0" max="999" placeholder="0" /></div>
               <div class="form-group"><label>7 ft Taken</label><input type="number" id="a-arc7-att" min="0" max="999" placeholder="0" /></div>
-              <div class="step-title">Free Throws</div>
-              <div class="form-group"><label>Free Throws Made</label><input type="number" id="a-arc15" min="0" max="999" placeholder="0" /></div>
-              <div class="form-group"><label>Free Throws Taken</label><input type="number" id="a-arc15-att" min="0" max="999" placeholder="0" /></div>
             </div>
             <p style="color: var(--muted); font-size: 0.72rem; margin-top: 8px;">Taken starts blank. Enter the attempts for each station. Leave a station at 0 to skip it.</p>
             <button type="submit" class="submit-btn">Save Project Arc Session</button>
@@ -504,23 +500,23 @@
       const att = (key) => (s[key] !== undefined && s[key] !== null && s[key] !== '') ? (Number(s[key]) || 0) : 0;
       const arc2 = Number(s.arc2) || 0;
       const arc7 = Number(s.arc7) || 0;
-      const arc15 = Number(s.arc15) || 0;
-      const a = { arc2: att('arc2Att'), arc7: att('arc7Att'), arc15: att('arc15Att') };
-      a.total = a.arc2 + a.arc7 + a.arc15;
-      const made = arc2 + arc7 + arc15;
-      return { arc2, arc7, arc15, made, att: a };
+      // arc15 stays in storage but is not shown or counted on this tab.
+      const a = { arc2: att('arc2Att'), arc7: att('arc7Att') };
+      a.total = a.arc2 + a.arc7;
+      const made = arc2 + arc7;
+      return { arc2, arc7, made, att: a };
     }
 
     function calculateArcAggregate(list) {
-      const t = { n: list.length, a2: 0, a7: 0, a15: 0 };
-      const A = { a2: 0, a7: 0, a15: 0 };
+      const t = { n: list.length, a2: 0, a7: 0 };
+      const A = { a2: 0, a7: 0 };
       list.forEach(s => {
         const m = getArcMetrics(s);
-        t.a2 += m.arc2; t.a7 += m.arc7; t.a15 += m.arc15;
-        A.a2 += m.att.arc2; A.a7 += m.att.arc7; A.a15 += m.att.arc15;
+        t.a2 += m.arc2; t.a7 += m.arc7;
+        A.a2 += m.att.arc2; A.a7 += m.att.arc7;
       });
-      const totM = t.a2 + t.a7 + t.a15;
-      const totA = A.a2 + A.a7 + A.a15;
+      const totM = t.a2 + t.a7;
+      const totA = A.a2 + A.a7;
       return `
         <div class="stats-group-title">Overview</div>
         <div class="stats-summary">
@@ -531,7 +527,6 @@
         <div class="stats-summary">
           ${statCard('2 ft', t.a2, A.a2, 'var(--accent)')}
           ${statCard('7 ft', t.a7, A.a7, 'var(--blue)')}
-          ${statCard('Free Throws', t.a15, A.a15, 'var(--green)')}
         </div>`;
     }
 
@@ -550,14 +545,13 @@
           <td>${s.date || '-'}</td>
           <td>${cell(m.arc2, m.att.arc2)}</td>
           <td>${cell(m.arc7, m.att.arc7)}</td>
-          <td class="green">${cell(m.arc15, m.att.arc15)}</td>
           <td class="pts-highlight">${cell(m.made, m.att.total)}</td>
           <td><button class="btn-del" onclick="deleteSession(${idx})">✕</button></td>
         `;
         tbody.appendChild(tr);
       });
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No Project Arc sessions logged yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No Project Arc sessions logged yet.</td></tr>`;
       }
       document.getElementById('stats-arc').innerHTML = calculateArcAggregate(list);
     }
@@ -565,7 +559,7 @@
     function handleArcFormSubmit(e) {
       e.preventDefault();
       const v = id => document.getElementById(id).value;
-      const sets = [['a-arc2', '2 ft'], ['a-arc7', '7 ft'], ['a-arc15', 'Free Throws']];
+      const sets = [['a-arc2', '2 ft'], ['a-arc7', '7 ft']];
       for (const [id, name] of sets) {
         if (clampNum(v(id), 999) > clampNum(v(id + '-att'), 999)) {
           alert(name + ': made can\'t be more than taken.');
@@ -579,8 +573,8 @@
         arc2Att: clampNum(v('a-arc2-att'), 999),
         arc7: clampNum(v('a-arc7'), 999),
         arc7Att: clampNum(v('a-arc7-att'), 999),
-        arc15: clampNum(v('a-arc15'), 999),
-        arc15Att: clampNum(v('a-arc15-att'), 999)
+        arc15: 0,
+        arc15Att: 0
       };
       if (!state.sessions) state.sessions = [];
       state.sessions.unshift(newSession);
