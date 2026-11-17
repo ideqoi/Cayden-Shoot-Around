@@ -240,23 +240,20 @@
               </div>
               <div class="step-title">1. Warm-up (form shots)</div>
               <label class="check-row"><input type="checkbox" id="n-warmup" /> Warm-up form shots done</label>
-              <div class="step-title">2. Free Throws, Set 1</div>
-              <div class="form-group"><label>FT Set 1 Made</label><input type="number" id="n-ft1" min="0" max="50" placeholder="0" /></div>
-              <div class="form-group"><label>FT Set 1 Taken</label><input type="number" id="n-ft1-att" min="0" max="50" value="50" /></div>
-              <div class="step-title">3. Mid-Range (all contested)</div>
-              <div class="form-group"><label>L Side, Drive L Made</label><input type="number" id="n-mid-ldl" min="0" max="25" placeholder="0" /></div>
-              <div class="form-group"><label>L Side, Drive L Taken</label><input type="number" id="n-mid-ldl-att" min="0" max="25" value="25" /></div>
-              <div class="form-group"><label>L Side, Drive R Made</label><input type="number" id="n-mid-ldr" min="0" max="25" placeholder="0" /></div>
-              <div class="form-group"><label>L Side, Drive R Taken</label><input type="number" id="n-mid-ldr-att" min="0" max="25" value="25" /></div>
-              <div class="form-group"><label>R Side, Drive L Made</label><input type="number" id="n-mid-rdl" min="0" max="25" placeholder="0" /></div>
-              <div class="form-group"><label>R Side, Drive L Taken</label><input type="number" id="n-mid-rdl-att" min="0" max="25" value="25" /></div>
-              <div class="form-group"><label>R Side, Drive R Made</label><input type="number" id="n-mid-rdr" min="0" max="25" placeholder="0" /></div>
-              <div class="form-group"><label>R Side, Drive R Taken</label><input type="number" id="n-mid-rdr-att" min="0" max="25" value="25" /></div>
-              <div class="step-title">4. Free Throws, Set 2</div>
-              <div class="form-group"><label>FT Set 2 Made</label><input type="number" id="n-ft2" min="0" max="50" placeholder="0" /></div>
-              <div class="form-group"><label>FT Set 2 Taken</label><input type="number" id="n-ft2-att" min="0" max="50" value="50" /></div>
+              <div class="step-title">2. Mid-Range (all contested)</div>
+              <div class="form-group"><label>L Side, Drive L Made</label><input type="number" id="n-mid-ldl" min="0" placeholder="0" /></div>
+              <div class="form-group"><label>L Side, Drive L Taken</label><input type="number" id="n-mid-ldl-att" min="0" placeholder="0" /></div>
+              <div class="form-group"><label>L Side, Drive R Made</label><input type="number" id="n-mid-ldr" min="0" placeholder="0" /></div>
+              <div class="form-group"><label>L Side, Drive R Taken</label><input type="number" id="n-mid-ldr-att" min="0" placeholder="0" /></div>
+              <div class="form-group"><label>R Side, Drive L Made</label><input type="number" id="n-mid-rdl" min="0" placeholder="0" /></div>
+              <div class="form-group"><label>R Side, Drive L Taken</label><input type="number" id="n-mid-rdl-att" min="0" placeholder="0" /></div>
+              <div class="form-group"><label>R Side, Drive R Made</label><input type="number" id="n-mid-rdr" min="0" placeholder="0" /></div>
+              <div class="form-group"><label>R Side, Drive R Taken</label><input type="number" id="n-mid-rdr-att" min="0" placeholder="0" /></div>
+              <div class="step-title">3. Free Throws</div>
+              <div class="form-group"><label>Free Throws Made</label><input type="number" id="n-ft1" min="0" placeholder="0" /></div>
+              <div class="form-group"><label>Free Throws Taken</label><input type="number" id="n-ft1-att" min="0" placeholder="0" /></div>
             </div>
-            <p style="color: var(--muted); font-size: 0.72rem; margin-top: 8px;">Taken starts at the full set. Lower it if a set gets cut short.</p>
+            <p style="color: var(--muted); font-size: 0.72rem; margin-top: 8px;">Taken starts blank. Enter made and attempts for each spot. Leave a spot at 0 to skip it. There is no limit on attempts.</p>
             <button type="submit" class="submit-btn">Save Mid + Free Throws Session</button>
           </form>
         </div>
@@ -346,6 +343,11 @@
     function clampNum(v, max) {
       const n = Math.round(Number(v) || 0);
       return Math.max(0, Math.min(max, n));
+    }
+
+    function parseCount(v) {
+      const n = Math.round(Number(v) || 0);
+      return Math.max(0, n);
     }
 
     function getNewMetrics(s) {
@@ -458,11 +460,10 @@
     function handleNewFormSubmit(e) {
       e.preventDefault();
       const v = id => document.getElementById(id).value;
-      const sets = [['n-ft1', 50, 'FT set 1'],
-        ['n-mid-ldl', 25, 'L side drive L'], ['n-mid-ldr', 25, 'L side drive R'], ['n-mid-rdl', 25, 'R side drive L'],
-        ['n-mid-rdr', 25, 'R side drive R'], ['n-ft2', 50, 'FT set 2']];
-      for (const [id, full, name] of sets) {
-        if (clampNum(v(id), full) > clampNum(v(id + '-att'), full)) {
+      const sets = [['n-mid-ldl', 'L side drive L'], ['n-mid-ldr', 'L side drive R'], ['n-mid-rdl', 'R side drive L'],
+        ['n-mid-rdr', 'R side drive R'], ['n-ft1', 'Free throws']];
+      for (const [id, name] of sets) {
+        if (parseCount(v(id)) > parseCount(v(id + '-att'))) {
           alert(name + ': made can\'t be more than taken.');
           return;
         }
@@ -474,20 +475,20 @@
         warmup: document.getElementById('n-warmup').checked,
         threeLW: 0,
         threeRW: 0,
-        ft1: clampNum(v('n-ft1'), 50),
-        midLDL: clampNum(v('n-mid-ldl'), 25),
-        midLDR: clampNum(v('n-mid-ldr'), 25),
-        midRDL: clampNum(v('n-mid-rdl'), 25),
-        midRDR: clampNum(v('n-mid-rdr'), 25),
-        ft2: clampNum(v('n-ft2'), 50),
+        ft1: parseCount(v('n-ft1')),
+        midLDL: parseCount(v('n-mid-ldl')),
+        midLDR: parseCount(v('n-mid-ldr')),
+        midRDL: parseCount(v('n-mid-rdl')),
+        midRDR: parseCount(v('n-mid-rdr')),
+        ft2: 0,
         threeLWAtt: 0,
         threeRWAtt: 0,
-        ft1Att: clampNum(v('n-ft1-att'), 50),
-        midLDLAtt: clampNum(v('n-mid-ldl-att'), 25),
-        midLDRAtt: clampNum(v('n-mid-ldr-att'), 25),
-        midRDLAtt: clampNum(v('n-mid-rdl-att'), 25),
-        midRDRAtt: clampNum(v('n-mid-rdr-att'), 25),
-        ft2Att: clampNum(v('n-ft2-att'), 50)
+        ft1Att: parseCount(v('n-ft1-att')),
+        midLDLAtt: parseCount(v('n-mid-ldl-att')),
+        midLDRAtt: parseCount(v('n-mid-ldr-att')),
+        midRDLAtt: parseCount(v('n-mid-rdl-att')),
+        midRDRAtt: parseCount(v('n-mid-rdr-att')),
+        ft2Att: 0
       };
       if (!state.sessions) state.sessions = [];
       state.sessions.unshift(newSession);
