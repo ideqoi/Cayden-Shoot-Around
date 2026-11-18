@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Three tabs: Old routine, Mid + Free Throws (routine:"v2"), and Project Arc (routine:"arc"). -->
+<!-- Three tabs: Old routine, Free Throws, and Mid Range. Historical v2 (combined) shows on FT and Mid tabs. routine:"arc" stays in storage, hidden. -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -103,8 +103,8 @@
 
     <div class="tabs">
       <button class="tab-btn active" id="tab-btn-old" onclick="showTab('old')">Old routine</button>
-      <button class="tab-btn" id="tab-btn-new" onclick="showTab('new')">Mid + Free Throws</button>
-      <button class="tab-btn" id="tab-btn-arc" onclick="showTab('arc')">Project Arc</button>
+      <button class="tab-btn" id="tab-btn-ft" onclick="showTab('ft')">Free Throws</button>
+      <button class="tab-btn" id="tab-btn-mid" onclick="showTab('mid')">Mid Range</button>
     </div>
 
     <div class="tab-pane active" id="tab-old">
@@ -193,12 +193,62 @@
     </div>
     </div>
 
-    <!-- Mid + Free Throws tab: v2 sessions only (threes hidden, kept in storage) -->
-    <div class="tab-pane" id="tab-new">
+    <!-- Free Throws tab: historical v2 (combined) + new kind:"ft" sessions -->
+    <div class="tab-pane" id="tab-ft">
       <div class="splits-wrapper">
-        <div class="split-section" style="border-left: 4px solid var(--accent);">
-          <div class="split-header"><span style="color: var(--accent);">Mid + Free Throws Percentages (Mid + Free Throws sessions only)</span></div>
-          <div id="stats-new"></div>
+        <div class="split-section" style="border-left: 4px solid var(--green);">
+          <div class="split-header"><span style="color: var(--green);">Free Throw Percentages</span></div>
+          <div id="stats-ft"></div>
+        </div>
+      </div>
+
+      <div class="table-box">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>G/C</th>
+              <th>FT Set 1</th>
+              <th>FT Set 2</th>
+              <th>FT Total</th>
+              <th style="color:var(--gold);">Total Points</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="ft-sessions-body"></tbody>
+        </table>
+      </div>
+
+      <div class="panels-grid">
+        <div class="panel-box">
+          <div class="panel-title">Log Free Throws Session</div>
+          <form id="ft-session-form" onsubmit="handleFtFormSubmit(event)">
+            <div class="form-grid">
+              <div class="form-group"><label>Date</label><input type="date" id="f-date" required /></div>
+              <div class="form-group">
+                <label>Vision (G / C)</label>
+                <select id="f-gc">
+                  <option value="C">Contacts (C)</option>
+                  <option value="G">Glasses (G)</option>
+                </select>
+              </div>
+              <div class="step-title">Free Throws</div>
+              <div class="form-group"><label>Free Throws Made</label><input type="number" id="f-ft1" min="0" placeholder="0" /></div>
+              <div class="form-group"><label>Free Throws Taken</label><input type="number" id="f-ft1-att" min="0" placeholder="0" /></div>
+            </div>
+            <p style="color: var(--muted); font-size: 0.72rem; margin-top: 8px;">Taken starts blank. There is no limit on attempts. Leave taken at 0 to skip.</p>
+            <button type="submit" class="submit-btn">Save Free Throws Session</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mid Range tab: historical v2 (combined) + new kind:"mid" sessions -->
+    <div class="tab-pane" id="tab-mid">
+      <div class="splits-wrapper">
+        <div class="split-section" style="border-left: 4px solid var(--blue);">
+          <div class="split-header"><span style="color: var(--blue);">Mid-Range Percentages</span></div>
+          <div id="stats-mid"></div>
         </div>
       </div>
 
@@ -209,96 +259,46 @@
               <th>Date</th>
               <th>G/C</th>
               <th>Warm-up</th>
-              <th>FT Set 1</th>
-              <th>Mid L Drv L</th>
-              <th>Mid L Drv R</th>
-              <th>Mid R Drv L</th>
-              <th>Mid R Drv R</th>
+              <th>L Drv L</th>
+              <th>L Drv R</th>
+              <th>R Drv L</th>
+              <th>R Drv R</th>
               <th>Total Mid</th>
-              <th>FT Set 2</th>
-              <th>FT Total</th>
               <th style="color:var(--gold);">Total Points</th>
               <th>Action</th>
             </tr>
           </thead>
-          <tbody id="new-sessions-body"></tbody>
+          <tbody id="mid-sessions-body"></tbody>
         </table>
       </div>
 
       <div class="panels-grid">
         <div class="panel-box">
-          <div class="panel-title">Log Mid + Free Throws Session</div>
-          <form id="new-session-form" onsubmit="handleNewFormSubmit(event)">
+          <div class="panel-title">Log Mid Range Session</div>
+          <form id="mid-session-form" onsubmit="handleMidFormSubmit(event)">
             <div class="form-grid">
-              <div class="form-group"><label>Date</label><input type="date" id="n-date" required /></div>
+              <div class="form-group"><label>Date</label><input type="date" id="m-date" required /></div>
               <div class="form-group">
                 <label>Vision (G / C)</label>
-                <select id="n-gc">
+                <select id="m-gc">
                   <option value="C">Contacts (C)</option>
                   <option value="G">Glasses (G)</option>
                 </select>
               </div>
               <div class="step-title">1. Warm-up (form shots)</div>
-              <label class="check-row"><input type="checkbox" id="n-warmup" /> Warm-up form shots done</label>
+              <label class="check-row"><input type="checkbox" id="m-warmup" /> Warm-up form shots done</label>
               <div class="step-title">2. Mid-Range (all contested)</div>
-              <div class="form-group"><label>L Side, Drive L Made</label><input type="number" id="n-mid-ldl" min="0" placeholder="0" /></div>
-              <div class="form-group"><label>L Side, Drive L Taken</label><input type="number" id="n-mid-ldl-att" min="0" placeholder="0" /></div>
-              <div class="form-group"><label>L Side, Drive R Made</label><input type="number" id="n-mid-ldr" min="0" placeholder="0" /></div>
-              <div class="form-group"><label>L Side, Drive R Taken</label><input type="number" id="n-mid-ldr-att" min="0" placeholder="0" /></div>
-              <div class="form-group"><label>R Side, Drive L Made</label><input type="number" id="n-mid-rdl" min="0" placeholder="0" /></div>
-              <div class="form-group"><label>R Side, Drive L Taken</label><input type="number" id="n-mid-rdl-att" min="0" placeholder="0" /></div>
-              <div class="form-group"><label>R Side, Drive R Made</label><input type="number" id="n-mid-rdr" min="0" placeholder="0" /></div>
-              <div class="form-group"><label>R Side, Drive R Taken</label><input type="number" id="n-mid-rdr-att" min="0" placeholder="0" /></div>
-              <div class="step-title">3. Free Throws</div>
-              <div class="form-group"><label>Free Throws Made</label><input type="number" id="n-ft1" min="0" placeholder="0" /></div>
-              <div class="form-group"><label>Free Throws Taken</label><input type="number" id="n-ft1-att" min="0" placeholder="0" /></div>
+              <div class="form-group"><label>L Side, Drive L Made</label><input type="number" id="m-mid-ldl" min="0" placeholder="0" /></div>
+              <div class="form-group"><label>L Side, Drive L Taken</label><input type="number" id="m-mid-ldl-att" min="0" placeholder="0" /></div>
+              <div class="form-group"><label>L Side, Drive R Made</label><input type="number" id="m-mid-ldr" min="0" placeholder="0" /></div>
+              <div class="form-group"><label>L Side, Drive R Taken</label><input type="number" id="m-mid-ldr-att" min="0" placeholder="0" /></div>
+              <div class="form-group"><label>R Side, Drive L Made</label><input type="number" id="m-mid-rdl" min="0" placeholder="0" /></div>
+              <div class="form-group"><label>R Side, Drive L Taken</label><input type="number" id="m-mid-rdl-att" min="0" placeholder="0" /></div>
+              <div class="form-group"><label>R Side, Drive R Made</label><input type="number" id="m-mid-rdr" min="0" placeholder="0" /></div>
+              <div class="form-group"><label>R Side, Drive R Taken</label><input type="number" id="m-mid-rdr-att" min="0" placeholder="0" /></div>
             </div>
             <p style="color: var(--muted); font-size: 0.72rem; margin-top: 8px;">Taken starts blank. Enter made and attempts for each spot. Leave a spot at 0 to skip it. There is no limit on attempts.</p>
-            <button type="submit" class="submit-btn">Save Mid + Free Throws Session</button>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- Project Arc tab: routine:"arc" sessions only -->
-    <div class="tab-pane" id="tab-arc">
-      <div class="splits-wrapper">
-        <div class="split-section" style="border-left: 4px solid var(--gold);">
-          <div class="split-header"><span style="color: var(--gold);">Project Arc Percentages (Project Arc sessions only)</span></div>
-          <div id="stats-arc"></div>
-        </div>
-      </div>
-
-      <div class="table-box">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>2 ft</th>
-              <th>7 ft</th>
-              <th>Overall</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="arc-sessions-body"></tbody>
-        </table>
-      </div>
-
-      <div class="panels-grid">
-        <div class="panel-box">
-          <div class="panel-title">Log Project Arc Session</div>
-          <form id="arc-session-form" onsubmit="handleArcFormSubmit(event)">
-            <div class="form-grid">
-              <div class="form-group"><label>Date</label><input type="date" id="a-date" required /></div>
-              <div class="step-title">2 ft</div>
-              <div class="form-group"><label>2 ft Made</label><input type="number" id="a-arc2" min="0" max="999" placeholder="0" /></div>
-              <div class="form-group"><label>2 ft Taken</label><input type="number" id="a-arc2-att" min="0" max="999" placeholder="0" /></div>
-              <div class="step-title">7 ft</div>
-              <div class="form-group"><label>7 ft Made</label><input type="number" id="a-arc7" min="0" max="999" placeholder="0" /></div>
-              <div class="form-group"><label>7 ft Taken</label><input type="number" id="a-arc7-att" min="0" max="999" placeholder="0" /></div>
-            </div>
-            <p style="color: var(--muted); font-size: 0.72rem; margin-top: 8px;">Taken starts blank. Enter the attempts for each station. Leave a station at 0 to skip it.</p>
-            <button type="submit" class="submit-btn">Save Project Arc Session</button>
+            <button type="submit" class="submit-btn">Save Mid Range Session</button>
           </form>
         </div>
       </div>
@@ -322,18 +322,29 @@
       }
     }
 
-    // Mid + Free Throws sessions are tagged routine:"v2"; Project Arc is routine:"arc"; everything else is the old format.
+    // v2 sessions: historical combined (no kind) show on both FT and Mid tabs.
+    // New saves use kind:"ft" or kind:"mid" so each counts only on its own tab.
+    // routine:"arc" stays in storage but has no tab.
     function isNewRoutine(s) { return !!s && s.routine === 'v2'; }
     function isArcRoutine(s) { return !!s && s.routine === 'arc'; }
+    function isFtOnly(s) { return isNewRoutine(s) && s.kind === 'ft'; }
+    function isMidOnly(s) { return isNewRoutine(s) && s.kind === 'mid'; }
+    function isCombinedV2(s) { return isNewRoutine(s) && !isFtOnly(s) && !isMidOnly(s); }
+    function showsOnFtTab(s) { return isFtOnly(s) || isCombinedV2(s); }
+    function showsOnMidTab(s) { return isMidOnly(s) || isCombinedV2(s); }
     function isOldRoutine(s) { return !!s && !isNewRoutine(s) && !isArcRoutine(s); }
     function sessionKind(s) {
       if (isArcRoutine(s)) return 'arc';
+      if (isFtOnly(s)) return 'ft';
+      if (isMidOnly(s)) return 'mid';
       if (isNewRoutine(s)) return 'v2';
       return 'old';
     }
 
     function showTab(which) {
-      ['old', 'new', 'arc'].forEach(t => {
+      if (which === 'new') which = 'ft';
+      if (which !== 'old' && which !== 'ft' && which !== 'mid') which = 'old';
+      ['old', 'ft', 'mid'].forEach(t => {
         document.getElementById('tab-' + t).classList.toggle('active', t === which);
         document.getElementById('tab-btn-' + t).classList.toggle('active', t === which);
       });
@@ -362,8 +373,11 @@
       const three = threeLW + threeRW;
       const ft = ft1 + ft2;
       const mid = midLDL + midLDR + midRDL + midRDR;
-      // Threes stay in storage but are not shown or scored on this tab.
-      const points = mid * 2 + ft;
+      // Threes stay in storage but are not shown or scored.
+      // Each tab scores only its own shots: FT = 1 pt, mid = 2 pts.
+      const ftPoints = ft;
+      const midPoints = mid * 2;
+      const points = midPoints + ftPoints;
       // Shots taken per set; sessions saved before this field existed use the full set size.
       const att = (key, full) => (s[key] !== undefined && s[key] !== null && s[key] !== '') ? (Number(s[key]) || 0) : full;
       const a = {
@@ -374,7 +388,7 @@
       a.three = a.threeLW + a.threeRW;
       a.ft = a.ft1 + a.ft2;
       a.mid = a.midLDL + a.midLDR + a.midRDL + a.midRDR;
-      return { threeLW, threeRW, three, ft1, ft2, ft, midLDL, midLDR, midRDL, midRDR, mid, points, warmup: !!s.warmup, att: a };
+      return { threeLW, threeRW, three, ft1, ft2, ft, midLDL, midLDR, midRDL, midRDR, mid, ftPoints, midPoints, points, warmup: !!s.warmup, att: a };
     }
 
     function pct(made, att) {
@@ -386,16 +400,14 @@
       return `<div class="stat-card"><div class="label">${label}</div><div class="val" style="color:${has ? color : 'var(--muted)'};">${pct(made, att)}</div><div class="sub-count">${made}/${att}</div></div>`;
     }
 
-    function calculateNewAggregate(list) {
-      const t = { n: list.length, lw: 0, rw: 0, ft1: 0, ft2: 0, ldl: 0, ldr: 0, rdl: 0, rdr: 0, pts: 0, max: 0 };
-      const A = { lw: 0, rw: 0, ft1: 0, ft2: 0, ldl: 0, ldr: 0, rdl: 0, rdr: 0 };
+    function calculateFtAggregate(list) {
+      const t = { n: list.length, ft1: 0, ft2: 0, pts: 0, max: 0 };
+      const A = { ft1: 0, ft2: 0 };
       list.forEach(s => {
         const m = getNewMetrics(s);
-        t.lw += m.threeLW; t.rw += m.threeRW; t.ft1 += m.ft1; t.ft2 += m.ft2;
-        t.ldl += m.midLDL; t.ldr += m.midLDR; t.rdl += m.midRDL; t.rdr += m.midRDR;
-        t.pts += m.points; if (m.points > t.max) t.max = m.points;
-        A.lw += m.att.threeLW; A.rw += m.att.threeRW; A.ft1 += m.att.ft1; A.ft2 += m.att.ft2;
-        A.ldl += m.att.midLDL; A.ldr += m.att.midLDR; A.rdl += m.att.midRDL; A.rdr += m.att.midRDR;
+        t.ft1 += m.ft1; t.ft2 += m.ft2;
+        t.pts += m.ftPoints; if (m.ftPoints > t.max) t.max = m.ftPoints;
+        A.ft1 += m.att.ft1; A.ft2 += m.att.ft2;
       });
       const n = t.n;
       return `
@@ -410,6 +422,25 @@
           ${statCard('FT Set 1', t.ft1, A.ft1, 'var(--green)')}
           ${statCard('FT Set 2', t.ft2, A.ft2, 'var(--green)')}
           ${statCard('FT Total', t.ft1 + t.ft2, A.ft1 + A.ft2, 'var(--green)')}
+        </div>`;
+    }
+
+    function calculateMidAggregate(list) {
+      const t = { n: list.length, ldl: 0, ldr: 0, rdl: 0, rdr: 0, pts: 0, max: 0 };
+      const A = { ldl: 0, ldr: 0, rdl: 0, rdr: 0 };
+      list.forEach(s => {
+        const m = getNewMetrics(s);
+        t.ldl += m.midLDL; t.ldr += m.midLDR; t.rdl += m.midRDL; t.rdr += m.midRDR;
+        t.pts += m.midPoints; if (m.midPoints > t.max) t.max = m.midPoints;
+        A.ldl += m.att.midLDL; A.ldr += m.att.midLDR; A.rdl += m.att.midRDL; A.rdr += m.att.midRDR;
+      });
+      const n = t.n;
+      return `
+        <div class="stats-group-title">Overview</div>
+        <div class="stats-summary">
+          <div class="stat-card"><div class="label">Sessions</div><div class="val">${n}</div></div>
+          <div class="stat-card"><div class="label">Avg Score</div><div class="val" style="color:${n ? 'var(--gold)' : 'var(--muted)'};">${n ? (t.pts / n).toFixed(1) : '-'}</div></div>
+          <div class="stat-card"><div class="label">High Score</div><div class="val" style="color:${n ? 'var(--gold)' : 'var(--muted)'};">${n ? t.max : '-'}</div></div>
         </div>
         <div class="stats-group-title">Mid-Range (contested)</div>
         <div class="stats-summary">
@@ -421,13 +452,43 @@
         </div>`;
     }
 
-    function renderNew() {
-      const tbody = document.getElementById('new-sessions-body');
+    function renderFt() {
+      const tbody = document.getElementById('ft-sessions-body');
       tbody.innerHTML = '';
       const all = state.sessions || [];
       const list = [];
       all.forEach((s, idx) => {
-        if (!isNewRoutine(s)) return;
+        if (!showsOnFtTab(s)) return;
+        list.push(s);
+        const m = getNewMetrics(s);
+        const rawGC = (s.glassesOrContacts || s.gc || 'C').toUpperCase();
+        const gcBadge = rawGC === 'G' ? `<span class="badge-eye badge-g">G</span>` : `<span class="badge-eye badge-c">C</span>`;
+        const cell = (made, att) => `${made}/${att} <span class="pct-sub">(${pct(made, att)})</span>`;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${s.date || '-'}</td>
+          <td>${gcBadge}</td>
+          <td>${cell(m.ft1, m.att.ft1)}</td>
+          <td>${cell(m.ft2, m.att.ft2)}</td>
+          <td class="green">${cell(m.ft, m.att.ft)}</td>
+          <td class="pts-highlight">${m.ftPoints} pts</td>
+          <td><button class="btn-del" onclick="deleteSession(${idx})">✕</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No free throw sessions logged yet.</td></tr>`;
+      }
+      document.getElementById('stats-ft').innerHTML = calculateFtAggregate(list);
+    }
+
+    function renderMid() {
+      const tbody = document.getElementById('mid-sessions-body');
+      tbody.innerHTML = '';
+      const all = state.sessions || [];
+      const list = [];
+      all.forEach((s, idx) => {
+        if (!showsOnMidTab(s)) return;
         list.push(s);
         const m = getNewMetrics(s);
         const rawGC = (s.glassesOrContacts || s.gc || 'C').toUpperCase();
@@ -438,58 +499,46 @@
           <td>${s.date || '-'}</td>
           <td>${gcBadge}</td>
           <td>${m.warmup ? '<span class="green">✓</span>' : '<span class="pct-sub">-</span>'}</td>
-          <td>${cell(m.ft1, m.att.ft1)}</td>
           <td>${cell(m.midLDL, m.att.midLDL)}</td>
           <td>${cell(m.midLDR, m.att.midLDR)}</td>
           <td>${cell(m.midRDL, m.att.midRDL)}</td>
           <td>${cell(m.midRDR, m.att.midRDR)}</td>
           <td class="blue">${cell(m.mid, m.att.mid)}</td>
-          <td>${cell(m.ft2, m.att.ft2)}</td>
-          <td class="green">${cell(m.ft, m.att.ft)}</td>
-          <td class="pts-highlight">${m.points} pts</td>
+          <td class="pts-highlight">${m.midPoints} pts</td>
           <td><button class="btn-del" onclick="deleteSession(${idx})">✕</button></td>
         `;
         tbody.appendChild(tr);
       });
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="13" class="empty-state">No Mid + Free Throws sessions logged yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" class="empty-state">No mid-range sessions logged yet.</td></tr>`;
       }
-      document.getElementById('stats-new').innerHTML = calculateNewAggregate(list);
+      document.getElementById('stats-mid').innerHTML = calculateMidAggregate(list);
     }
 
-    function handleNewFormSubmit(e) {
+    function zeroShotFields() {
+      return {
+        threeLW: 0, threeRW: 0, threeLWAtt: 0, threeRWAtt: 0,
+        ft1: 0, ft1Att: 0, ft2: 0, ft2Att: 0,
+        midLDL: 0, midLDLAtt: 0, midLDR: 0, midLDRAtt: 0,
+        midRDL: 0, midRDLAtt: 0, midRDR: 0, midRDRAtt: 0
+      };
+    }
+
+    function handleFtFormSubmit(e) {
       e.preventDefault();
       const v = id => document.getElementById(id).value;
-      const sets = [['n-mid-ldl', 'L side drive L'], ['n-mid-ldr', 'L side drive R'], ['n-mid-rdl', 'R side drive L'],
-        ['n-mid-rdr', 'R side drive R'], ['n-ft1', 'Free throws']];
-      for (const [id, name] of sets) {
-        if (parseCount(v(id)) > parseCount(v(id + '-att'))) {
-          alert(name + ': made can\'t be more than taken.');
-          return;
-        }
+      if (parseCount(v('f-ft1')) > parseCount(v('f-ft1-att'))) {
+        alert('Free throws: made can\'t be more than taken.');
+        return;
       }
-      const newSession = {
+      const newSession = Object.assign(zeroShotFields(), {
         routine: 'v2',
-        date: v('n-date'),
-        glassesOrContacts: v('n-gc'),
-        warmup: document.getElementById('n-warmup').checked,
-        threeLW: 0,
-        threeRW: 0,
-        ft1: parseCount(v('n-ft1')),
-        midLDL: parseCount(v('n-mid-ldl')),
-        midLDR: parseCount(v('n-mid-ldr')),
-        midRDL: parseCount(v('n-mid-rdl')),
-        midRDR: parseCount(v('n-mid-rdr')),
-        ft2: 0,
-        threeLWAtt: 0,
-        threeRWAtt: 0,
-        ft1Att: parseCount(v('n-ft1-att')),
-        midLDLAtt: parseCount(v('n-mid-ldl-att')),
-        midLDRAtt: parseCount(v('n-mid-ldr-att')),
-        midRDLAtt: parseCount(v('n-mid-rdl-att')),
-        midRDRAtt: parseCount(v('n-mid-rdr-att')),
-        ft2Att: 0
-      };
+        kind: 'ft',
+        date: v('f-date'),
+        glassesOrContacts: v('f-gc'),
+        ft1: parseCount(v('f-ft1')),
+        ft1Att: parseCount(v('f-ft1-att'))
+      });
       if (!state.sessions) state.sessions = [];
       state.sessions.unshift(newSession);
       render();
@@ -497,86 +546,31 @@
       e.target.reset();
     }
 
-    function getArcMetrics(s) {
-      const att = (key) => (s[key] !== undefined && s[key] !== null && s[key] !== '') ? (Number(s[key]) || 0) : 0;
-      const arc2 = Number(s.arc2) || 0;
-      const arc7 = Number(s.arc7) || 0;
-      // arc15 stays in storage but is not shown or counted on this tab.
-      const a = { arc2: att('arc2Att'), arc7: att('arc7Att') };
-      a.total = a.arc2 + a.arc7;
-      const made = arc2 + arc7;
-      return { arc2, arc7, made, att: a };
-    }
-
-    function calculateArcAggregate(list) {
-      const t = { n: list.length, a2: 0, a7: 0 };
-      const A = { a2: 0, a7: 0 };
-      list.forEach(s => {
-        const m = getArcMetrics(s);
-        t.a2 += m.arc2; t.a7 += m.arc7;
-        A.a2 += m.att.arc2; A.a7 += m.att.arc7;
-      });
-      const totM = t.a2 + t.a7;
-      const totA = A.a2 + A.a7;
-      return `
-        <div class="stats-group-title">Overview</div>
-        <div class="stats-summary">
-          <div class="stat-card"><div class="label">Sessions</div><div class="val">${t.n}</div></div>
-          ${statCard('Overall', totM, totA, 'var(--gold)')}
-        </div>
-        <div class="stats-group-title">Stations</div>
-        <div class="stats-summary">
-          ${statCard('2 ft', t.a2, A.a2, 'var(--accent)')}
-          ${statCard('7 ft', t.a7, A.a7, 'var(--blue)')}
-        </div>`;
-    }
-
-    function renderArc() {
-      const tbody = document.getElementById('arc-sessions-body');
-      tbody.innerHTML = '';
-      const all = state.sessions || [];
-      const list = [];
-      all.forEach((s, idx) => {
-        if (!isArcRoutine(s)) return;
-        list.push(s);
-        const m = getArcMetrics(s);
-        const cell = (made, att) => `${made}/${att} <span class="pct-sub">(${pct(made, att)})</span>`;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${s.date || '-'}</td>
-          <td>${cell(m.arc2, m.att.arc2)}</td>
-          <td>${cell(m.arc7, m.att.arc7)}</td>
-          <td class="pts-highlight">${cell(m.made, m.att.total)}</td>
-          <td><button class="btn-del" onclick="deleteSession(${idx})">✕</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
-      if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No Project Arc sessions logged yet.</td></tr>`;
-      }
-      document.getElementById('stats-arc').innerHTML = calculateArcAggregate(list);
-    }
-
-    function handleArcFormSubmit(e) {
+    function handleMidFormSubmit(e) {
       e.preventDefault();
       const v = id => document.getElementById(id).value;
-      const sets = [['a-arc2', '2 ft'], ['a-arc7', '7 ft']];
+      const sets = [['m-mid-ldl', 'L side drive L'], ['m-mid-ldr', 'L side drive R'], ['m-mid-rdl', 'R side drive L'], ['m-mid-rdr', 'R side drive R']];
       for (const [id, name] of sets) {
-        if (clampNum(v(id), 999) > clampNum(v(id + '-att'), 999)) {
+        if (parseCount(v(id)) > parseCount(v(id + '-att'))) {
           alert(name + ': made can\'t be more than taken.');
           return;
         }
       }
-      const newSession = {
-        routine: 'arc',
-        date: v('a-date'),
-        arc2: clampNum(v('a-arc2'), 999),
-        arc2Att: clampNum(v('a-arc2-att'), 999),
-        arc7: clampNum(v('a-arc7'), 999),
-        arc7Att: clampNum(v('a-arc7-att'), 999),
-        arc15: 0,
-        arc15Att: 0
-      };
+      const newSession = Object.assign(zeroShotFields(), {
+        routine: 'v2',
+        kind: 'mid',
+        date: v('m-date'),
+        glassesOrContacts: v('m-gc'),
+        warmup: document.getElementById('m-warmup').checked,
+        midLDL: parseCount(v('m-mid-ldl')),
+        midLDLAtt: parseCount(v('m-mid-ldl-att')),
+        midLDR: parseCount(v('m-mid-ldr')),
+        midLDRAtt: parseCount(v('m-mid-ldr-att')),
+        midRDL: parseCount(v('m-mid-rdl')),
+        midRDLAtt: parseCount(v('m-mid-rdl-att')),
+        midRDR: parseCount(v('m-mid-rdr')),
+        midRDRAtt: parseCount(v('m-mid-rdr-att'))
+      });
       if (!state.sessions) state.sessions = [];
       state.sessions.unshift(newSession);
       render();
@@ -761,8 +755,8 @@
     }
 
     function render() {
-      renderNew();
-      renderArc();
+      renderFt();
+      renderMid();
       const tbody = document.getElementById('sessions-body');
       tbody.innerHTML = '';
 
@@ -898,7 +892,7 @@
 
     try {
       const savedTab = localStorage.getItem('cayden_shooting_tab');
-      if (savedTab === 'new' || savedTab === 'arc') showTab(savedTab);
+      if (savedTab === 'new' || savedTab === 'ft' || savedTab === 'mid') showTab(savedTab);
     } catch (e) {}
     loadData();
   </script>
