@@ -209,6 +209,7 @@
               <th>Date</th>
               <th>G/C</th>
               <th>Free Throws</th>
+              <th>Xtra</th>
               <th>Attempts to 40</th>
               <th>Action</th>
             </tr>
@@ -233,8 +234,11 @@
               <div class="step-title">Free Throws</div>
               <div class="form-group"><label>Free Throws Made</label><input type="number" id="f-ft1" min="0" placeholder="0" /></div>
               <div class="form-group"><label>Free Throws Taken</label><input type="number" id="f-ft1-att" min="0" placeholder="0" /></div>
+              <div class="step-title">Xtra set (optional)</div>
+              <div class="form-group"><label>Xtra Made</label><input type="number" id="f-ftx" min="0" placeholder="0" /></div>
+              <div class="form-group"><label>Xtra Taken</label><input type="number" id="f-ftx-att" min="0" placeholder="0" /></div>
             </div>
-            <p style="color: var(--muted); font-size: 0.72rem; margin-top: 8px;">Goal: shoot until 40 makes, then enter made and attempts. Attempts to 40 and the high score / average only count when made is exactly 40. There is no limit on attempts.</p>
+            <p style="color: var(--muted); font-size: 0.72rem; margin-top: 8px;">Goal: shoot until 40 makes in the main set, then enter made and attempts. Attempts to 40 and the high score / average only count when the main set is exactly 40 makes. An optional Xtra set counts toward the session and overall totals, but not toward attempts to 40. There is no limit on attempts.</p>
             <button type="submit" class="submit-btn">Save Free Throws Session</button>
           </form>
         </div>
@@ -364,12 +368,13 @@
       const threeRW = Number(s.threeRW) || 0;
       const ft1 = Number(s.ft1) || 0;
       const ft2 = Number(s.ft2) || 0;
+      const ftx = Number(s.ftx) || 0;
       const midLDL = Number(s.midLDL) || 0;
       const midLDR = Number(s.midLDR) || 0;
       const midRDL = Number(s.midRDL) || 0;
       const midRDR = Number(s.midRDR) || 0;
       const three = threeLW + threeRW;
-      const ft = ft1 + ft2;
+      const ft = ft1 + ft2 + ftx;
       const mid = midLDL + midLDR + midRDL + midRDR;
       // Threes stay in storage but are not shown or scored.
       // Each tab scores only its own shots: FT = 1 pt, mid = 2 pts.
@@ -380,13 +385,13 @@
       const att = (key, full) => (s[key] !== undefined && s[key] !== null && s[key] !== '') ? (Number(s[key]) || 0) : full;
       const a = {
         threeLW: att('threeLWAtt', 5), threeRW: att('threeRWAtt', 5),
-        ft1: att('ft1Att', 50), ft2: att('ft2Att', 50),
+        ft1: att('ft1Att', 50), ft2: att('ft2Att', 50), ftx: att('ftxAtt', 0),
         midLDL: att('midLDLAtt', 25), midLDR: att('midLDRAtt', 25), midRDL: att('midRDLAtt', 25), midRDR: att('midRDRAtt', 25)
       };
       a.three = a.threeLW + a.threeRW;
-      a.ft = a.ft1 + a.ft2;
+      a.ft = a.ft1 + a.ft2 + a.ftx;
       a.mid = a.midLDL + a.midLDR + a.midRDL + a.midRDR;
-      return { threeLW, threeRW, three, ft1, ft2, ft, midLDL, midLDR, midRDL, midRDR, mid, ftPoints, midPoints, points, warmup: !!s.warmup, att: a };
+      return { threeLW, threeRW, three, ft1, ft2, ftx, ft, midLDL, midLDR, midRDL, midRDR, mid, ftPoints, midPoints, points, warmup: !!s.warmup, att: a };
     }
 
     function pct(made, att) {
@@ -398,13 +403,13 @@
       return `<div class="stat-card"><div class="label">${label}</div><div class="val" style="color:${has ? color : 'var(--muted)'};">${pct(made, att)}</div><div class="sub-count">${made}/${att}</div></div>`;
     }
 
-    // Attempts-to-40 is only scored on kind:"ft" sessions with made exactly 40.
-    // Historical v2, under 40, or over 40 cannot tell when the 40th make happened.
+    // Attempts-to-40 is only scored on kind:"ft" sessions whose MAIN set is exactly 40 makes.
+    // Xtra, historical v2, under 40, or over 40 cannot tell when the 40th make happened.
     function ftAttemptsTo40(s) {
       if (!isFtOnly(s)) return null;
       const m = getNewMetrics(s);
-      if (m.ft !== 40 || m.att.ft <= 0) return null;
-      return m.att.ft;
+      if (m.ft1 !== 40 || m.att.ft1 <= 0) return null;
+      return m.att.ft1;
     }
 
     function calculateFtAggregate(list) {
@@ -474,18 +479,20 @@
         const gcBadge = rawGC === 'G' ? `<span class="badge-eye badge-g">G</span>` : `<span class="badge-eye badge-c">C</span>`;
         const cell = (made, att) => `${made}/${att} <span class="pct-sub">(${pct(made, att)})</span>`;
         const to40 = ftAttemptsTo40(s);
+        const xtraCell = m.att.ftx > 0 ? cell(m.ftx, m.att.ftx) : '-';
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${s.date || '-'}</td>
           <td>${gcBadge}</td>
           <td class="green">${cell(m.ft, m.att.ft)}</td>
+          <td>${xtraCell}</td>
           <td>${to40 !== null ? to40 : '-'}</td>
           <td><button class="btn-del" onclick="deleteSession(${idx})">✕</button></td>
         `;
         tbody.appendChild(tr);
       });
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No free throw sessions logged yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No free throw sessions logged yet.</td></tr>`;
       }
       document.getElementById('stats-ft').innerHTML = calculateFtAggregate(list);
     }
@@ -526,7 +533,7 @@
     function zeroShotFields() {
       return {
         threeLW: 0, threeRW: 0, threeLWAtt: 0, threeRWAtt: 0,
-        ft1: 0, ft1Att: 0, ft2: 0, ft2Att: 0,
+        ft1: 0, ft1Att: 0, ft2: 0, ft2Att: 0, ftx: 0, ftxAtt: 0,
         midLDL: 0, midLDLAtt: 0, midLDR: 0, midLDRAtt: 0,
         midRDL: 0, midRDLAtt: 0, midRDR: 0, midRDRAtt: 0
       };
@@ -539,13 +546,19 @@
         alert('Free throws: made can\'t be more than taken.');
         return;
       }
+      if (parseCount(v('f-ftx')) > parseCount(v('f-ftx-att'))) {
+        alert('Xtra set: made can\'t be more than taken.');
+        return;
+      }
       const newSession = Object.assign(zeroShotFields(), {
         routine: 'v2',
         kind: 'ft',
         date: v('f-date'),
         glassesOrContacts: v('f-gc'),
         ft1: parseCount(v('f-ft1')),
-        ft1Att: parseCount(v('f-ft1-att'))
+        ft1Att: parseCount(v('f-ft1-att')),
+        ftx: parseCount(v('f-ftx')),
+        ftxAtt: parseCount(v('f-ftx-att'))
       });
       if (!state.sessions) state.sessions = [];
       state.sessions.unshift(newSession);
