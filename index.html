@@ -197,7 +197,7 @@
     <div class="tab-pane" id="tab-ft">
       <div class="splits-wrapper">
         <div class="split-section" style="border-left: 4px solid var(--green);">
-          <div class="split-header"><span style="color: var(--green);">Free Throw Percentages</span></div>
+          <div class="split-header"><span style="color: var(--green);">Free Throws — goal is 40 makes</span></div>
           <div id="stats-ft"></div>
         </div>
       </div>
@@ -208,10 +208,8 @@
             <tr>
               <th>Date</th>
               <th>G/C</th>
-              <th>FT Set 1</th>
-              <th>FT Set 2</th>
-              <th>FT Total</th>
-              <th style="color:var(--gold);">Total Points</th>
+              <th>Free Throws</th>
+              <th>Attempts to 40</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -236,7 +234,7 @@
               <div class="form-group"><label>Free Throws Made</label><input type="number" id="f-ft1" min="0" placeholder="0" /></div>
               <div class="form-group"><label>Free Throws Taken</label><input type="number" id="f-ft1-att" min="0" placeholder="0" /></div>
             </div>
-            <p style="color: var(--muted); font-size: 0.72rem; margin-top: 8px;">Taken starts blank. There is no limit on attempts. Leave taken at 0 to skip.</p>
+            <p style="color: var(--muted); font-size: 0.72rem; margin-top: 8px;">Goal: shoot until 40 makes, then enter made and attempts. Attempts to 40 and the high score / average only count when made is exactly 40. There is no limit on attempts.</p>
             <button type="submit" class="submit-btn">Save Free Throws Session</button>
           </form>
         </div>
@@ -400,28 +398,39 @@
       return `<div class="stat-card"><div class="label">${label}</div><div class="val" style="color:${has ? color : 'var(--muted)'};">${pct(made, att)}</div><div class="sub-count">${made}/${att}</div></div>`;
     }
 
+    // Attempts-to-40 is only scored on kind:"ft" sessions with made exactly 40.
+    // Historical v2, under 40, or over 40 cannot tell when the 40th make happened.
+    function ftAttemptsTo40(s) {
+      if (!isFtOnly(s)) return null;
+      const m = getNewMetrics(s);
+      if (m.ft !== 40 || m.att.ft <= 0) return null;
+      return m.att.ft;
+    }
+
     function calculateFtAggregate(list) {
-      const t = { n: list.length, ft1: 0, ft2: 0, pts: 0, max: 0 };
-      const A = { ft1: 0, ft2: 0 };
+      const t = { n: list.length, made: 0, att: 0 };
+      const to40 = [];
       list.forEach(s => {
         const m = getNewMetrics(s);
-        t.ft1 += m.ft1; t.ft2 += m.ft2;
-        t.pts += m.ftPoints; if (m.ftPoints > t.max) t.max = m.ftPoints;
-        A.ft1 += m.att.ft1; A.ft2 += m.att.ft2;
+        t.made += m.ft;
+        t.att += m.att.ft;
+        const a = ftAttemptsTo40(s);
+        if (a !== null) to40.push(a);
       });
+      const q = to40.length;
+      const best = q ? Math.min.apply(null, to40) : null;
+      const avg = q ? (to40.reduce((sum, x) => sum + x, 0) / q) : null;
       const n = t.n;
       return `
         <div class="stats-group-title">Overview</div>
         <div class="stats-summary">
           <div class="stat-card"><div class="label">Sessions</div><div class="val">${n}</div></div>
-          <div class="stat-card"><div class="label">Avg Score</div><div class="val" style="color:${n ? 'var(--gold)' : 'var(--muted)'};">${n ? (t.pts / n).toFixed(1) : '-'}</div></div>
-          <div class="stat-card"><div class="label">High Score</div><div class="val" style="color:${n ? 'var(--gold)' : 'var(--muted)'};">${n ? t.max : '-'}</div></div>
+          <div class="stat-card"><div class="label">High Score</div><div class="val" style="color:${best !== null ? 'var(--gold)' : 'var(--muted)'};">${best !== null ? best : '-'}</div><div class="sub-count">fewest attempts to 40</div></div>
+          <div class="stat-card"><div class="label">Avg Score</div><div class="val" style="color:${avg !== null ? 'var(--gold)' : 'var(--muted)'};">${avg !== null ? avg.toFixed(1) : '-'}</div><div class="sub-count">avg attempts to 40</div></div>
         </div>
         <div class="stats-group-title">Free Throws</div>
         <div class="stats-summary">
-          ${statCard('FT Set 1', t.ft1, A.ft1, 'var(--green)')}
-          ${statCard('FT Set 2', t.ft2, A.ft2, 'var(--green)')}
-          ${statCard('FT Total', t.ft1 + t.ft2, A.ft1 + A.ft2, 'var(--green)')}
+          ${statCard('FT Total', t.made, t.att, 'var(--green)')}
         </div>`;
     }
 
@@ -464,20 +473,19 @@
         const rawGC = (s.glassesOrContacts || s.gc || 'C').toUpperCase();
         const gcBadge = rawGC === 'G' ? `<span class="badge-eye badge-g">G</span>` : `<span class="badge-eye badge-c">C</span>`;
         const cell = (made, att) => `${made}/${att} <span class="pct-sub">(${pct(made, att)})</span>`;
+        const to40 = ftAttemptsTo40(s);
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${s.date || '-'}</td>
           <td>${gcBadge}</td>
-          <td>${cell(m.ft1, m.att.ft1)}</td>
-          <td>${cell(m.ft2, m.att.ft2)}</td>
           <td class="green">${cell(m.ft, m.att.ft)}</td>
-          <td class="pts-highlight">${m.ftPoints} pts</td>
+          <td>${to40 !== null ? to40 : '-'}</td>
           <td><button class="btn-del" onclick="deleteSession(${idx})">✕</button></td>
         `;
         tbody.appendChild(tr);
       });
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No free throw sessions logged yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No free throw sessions logged yet.</td></tr>`;
       }
       document.getElementById('stats-ft').innerHTML = calculateFtAggregate(list);
     }
